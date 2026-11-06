@@ -12,7 +12,6 @@ import {
   addComment as bdAddComment,
   addLabel as bdAddLabel,
   removeLabel as bdRemoveLabel,
-  listBeads,
 } from "../lib/bd"
 import { invalidateEpicCache } from "../lib/epic-cache"
 import { projectDirOrNull, readOriginUrl } from "../lib/git-remote"
@@ -24,7 +23,7 @@ import {
   selectQueue,
 } from "../lib/label-queues"
 import { lastPrNumber } from "../lib/pr-notes"
-import { readOptions } from "../lib/read-options"
+import { invalidateQueueBeads, readQueueBeads } from "../lib/queue-beads"
 
 type Success<T> = { success: true; data: T }
 type Failure = { success: false; error: string }
@@ -84,18 +83,22 @@ async function query<T>(run: () => Promise<T>): Promise<Success<T> | Failure> {
   }
 }
 
-async function runWrite(write: () => Promise<void>): Promise<WriteResult> {
+async function runWrite(
+  dbPath: string | undefined,
+  write: () => Promise<void>,
+): Promise<WriteResult> {
   const result = await query(async () => {
     await write()
     invalidateEpicCache()
   })
+  invalidateQueueBeads(dbPath)
   if (!result.success) console.error("Review queue write failed:", result.error)
   return result.success ? { success: true } : result
 }
 
 export function listPrReview(dbPath?: string): Promise<Success<PrReviewRow[]> | Failure> {
   return query(async () => {
-    const beads = selectQueue(await listBeads(await readOptions(dbPath)), NEEDS_APPROVAL_LABEL)
+    const beads = selectQueue(await readQueueBeads(dbPath), NEEDS_APPROVAL_LABEL)
     const repo = beads.length === 0 ? null : await originRepo(dbPath)
     return beads.map((bead) => toPrReviewRow(bead, repo))
   })
@@ -103,14 +106,14 @@ export function listPrReview(dbPath?: string): Promise<Success<PrReviewRow[]> | 
 
 export function listNeedsInput(dbPath?: string): Promise<Success<NeedsInputRow[]> | Failure> {
   return query(async () => {
-    const beads = selectQueue(await listBeads(await readOptions(dbPath)), NEEDS_ANSWER_LABEL)
+    const beads = selectQueue(await readQueueBeads(dbPath), NEEDS_ANSWER_LABEL)
     return beads.map(toNeedsInputRow)
   })
 }
 
 export function countQueues(dbPath?: string): Promise<Success<QueueCounts> | Failure> {
   return query(async () => {
-    const beads = await listBeads(await readOptions(dbPath))
+    const beads = await readQueueBeads(dbPath)
     return {
       prReview: selectQueue(beads, NEEDS_APPROVAL_LABEL).length,
       needsInput: selectQueue(beads, NEEDS_ANSWER_LABEL).length,
@@ -119,11 +122,11 @@ export function countQueues(dbPath?: string): Promise<Success<QueueCounts> | Fai
 }
 
 export function approvePr(id: string, dbPath?: string): Promise<WriteResult> {
-  return runWrite(() => bdAddLabel(id, APPROVED_LABEL, writeOptions(dbPath)))
+  return runWrite(dbPath, () => bdAddLabel(id, APPROVED_LABEL, writeOptions(dbPath)))
 }
 
 export function clearNeedsInput(id: string, dbPath?: string): Promise<WriteResult> {
-  return runWrite(() => bdRemoveLabel(id, NEEDS_ANSWER_LABEL, writeOptions(dbPath)))
+  return runWrite(dbPath, () => bdRemoveLabel(id, NEEDS_ANSWER_LABEL, writeOptions(dbPath)))
 }
 
 export async function answerNeedsInput(
@@ -137,7 +140,7 @@ export async function answerNeedsInput(
   const result = await answerThenClear(
     () => bdAddComment(id, comment, options),
     () => bdRemoveLabel(id, NEEDS_ANSWER_LABEL, options),
-  )
+  ).finally(() => invalidateQueueBeads(dbPath))
   invalidateEpicCache()
   return result.success
     ? { success: true }
