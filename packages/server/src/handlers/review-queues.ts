@@ -2,8 +2,10 @@
 //
 // Both tabs are label queues over the active workspace (lib/label-queues.ts).
 // Writes touch labels and comments only: beadbox never calls GitHub or posts
-// PR comments. The PR link is built from the project's origin remote and the
-// last `pr=<n>` in the bead's notes; it is null whenever either is missing.
+// PR comments. After a successful write it also drops a best-effort worker
+// wake marker (lib/wake-marker.ts). The PR link is built from the project's
+// origin remote and the last `pr=<n>` in the bead's notes; it is null whenever
+// either is missing.
 
 import { answerComment, answerThenClear } from "../lib/answer-flow"
 import {
@@ -24,6 +26,7 @@ import {
 } from "../lib/label-queues"
 import { lastPrNumber } from "../lib/pr-notes"
 import { invalidateQueueBeads, readQueueBeads } from "../lib/queue-beads"
+import { type WakeAction, writeWakeMarker } from "../lib/wake-marker"
 
 type Success<T> = { success: true; data: T }
 type Failure = { success: false; error: string }
@@ -121,12 +124,27 @@ export function countQueues(dbPath?: string): Promise<Success<QueueCounts> | Fai
   })
 }
 
-export function approvePr(id: string, dbPath?: string): Promise<WriteResult> {
-  return runWrite(dbPath, () => bdAddLabel(id, APPROVED_LABEL, writeOptions(dbPath)))
+function wake(id: string, action: WakeAction): void {
+  void writeWakeMarker(id, action).catch((error: unknown) => {
+    console.error(
+      "Wake marker write failed:",
+      error instanceof Error ? error.message : String(error),
+    )
+  })
 }
 
-export function clearNeedsInput(id: string, dbPath?: string): Promise<WriteResult> {
-  return runWrite(dbPath, () => bdRemoveLabel(id, NEEDS_ANSWER_LABEL, writeOptions(dbPath)))
+export async function approvePr(id: string, dbPath?: string): Promise<WriteResult> {
+  const result = await runWrite(dbPath, () => bdAddLabel(id, APPROVED_LABEL, writeOptions(dbPath)))
+  if (result.success) wake(id, "approved")
+  return result
+}
+
+export async function clearNeedsInput(id: string, dbPath?: string): Promise<WriteResult> {
+  const result = await runWrite(dbPath, () =>
+    bdRemoveLabel(id, NEEDS_ANSWER_LABEL, writeOptions(dbPath)),
+  )
+  if (result.success) wake(id, "cleared")
+  return result
 }
 
 export async function answerNeedsInput(
@@ -142,6 +160,7 @@ export async function answerNeedsInput(
     () => bdRemoveLabel(id, NEEDS_ANSWER_LABEL, options),
   ).finally(() => invalidateQueueBeads(dbPath))
   invalidateEpicCache()
+  if (result.success || result.stage === "clear") wake(id, "answered")
   return result.success
     ? { success: true }
     : { success: false, error: result.error, stage: result.stage }
