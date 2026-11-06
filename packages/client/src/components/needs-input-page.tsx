@@ -28,6 +28,7 @@ function NeedsInputItem({ row, writes }: { row: NeedsInputRow; writes: Writes })
   const navigate = useNavigate()
   const [draft, setDraft] = useState("")
   const [failure, setFailure] = useState<string | null>(null)
+  const [sending, setSending] = useState(false)
 
   const fail = (message: string): false => {
     setFailure(message)
@@ -53,7 +54,12 @@ function NeedsInputItem({ row, writes }: { row: NeedsInputRow; writes: Writes })
   }
 
   const send = async () => {
-    if (await attempt(() => writes.answer(row.id, draft.trim()))) setDraft("")
+    setSending(true)
+    try {
+      if (await attempt(() => writes.answer(row.id, draft.trim()))) setDraft("")
+    } finally {
+      setSending(false)
+    }
   }
   const clear = () => attempt(() => writes.clear(row.id))
   const openBead = () => {
@@ -117,7 +123,7 @@ function NeedsInputItem({ row, writes }: { row: NeedsInputRow; writes: Writes })
           disabled={draft.trim() === "" || writes.isPending}
           onClick={() => void send()}
         >
-          {writes.isPending ? "Sending..." : "Send answer"}
+          {sending ? "Sending..." : "Send answer"}
         </Button>
       </div>
     </li>
