@@ -176,7 +176,7 @@ export function NeedsInputPage() {
     <ReviewQueueShell
       workspace={workspace}
       title="Needs Input"
-      description="Beads labeled human. Answer the worker or clear the flag."
+      description="Beads labeled needs-answer. Answer the worker or clear the label."
       icon={<Inbox className="h-5 w-5" />}
       isFetching={query.isFetching}
       isPending={writes.isPending}

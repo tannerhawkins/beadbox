@@ -17,7 +17,12 @@ import {
 import { invalidateEpicCache } from "../lib/epic-cache"
 import { projectDirOrNull, readOriginUrl } from "../lib/git-remote"
 import { type GithubRepo, parseGithubRemote, pullRequestUrl } from "../lib/github-remote"
-import { APPROVED_LABEL, HUMAN_LABEL, NEEDS_APPROVAL_LABEL, selectQueue } from "../lib/label-queues"
+import {
+  APPROVED_LABEL,
+  NEEDS_ANSWER_LABEL,
+  NEEDS_APPROVAL_LABEL,
+  selectQueue,
+} from "../lib/label-queues"
 import { lastPrNumber } from "../lib/pr-notes"
 import { readOptions } from "../lib/read-options"
 
@@ -98,7 +103,7 @@ export function listPrReview(dbPath?: string): Promise<Success<PrReviewRow[]> | 
 
 export function listNeedsInput(dbPath?: string): Promise<Success<NeedsInputRow[]> | Failure> {
   return query(async () => {
-    const beads = selectQueue(await listBeads(await readOptions(dbPath)), HUMAN_LABEL)
+    const beads = selectQueue(await listBeads(await readOptions(dbPath)), NEEDS_ANSWER_LABEL)
     return beads.map(toNeedsInputRow)
   })
 }
@@ -108,7 +113,7 @@ export function countQueues(dbPath?: string): Promise<Success<QueueCounts> | Fai
     const beads = await listBeads(await readOptions(dbPath))
     return {
       prReview: selectQueue(beads, NEEDS_APPROVAL_LABEL).length,
-      needsInput: selectQueue(beads, HUMAN_LABEL).length,
+      needsInput: selectQueue(beads, NEEDS_ANSWER_LABEL).length,
     }
   })
 }
@@ -118,7 +123,7 @@ export function approvePr(id: string, dbPath?: string): Promise<WriteResult> {
 }
 
 export function clearNeedsInput(id: string, dbPath?: string): Promise<WriteResult> {
-  return runWrite(() => bdRemoveLabel(id, HUMAN_LABEL, writeOptions(dbPath)))
+  return runWrite(() => bdRemoveLabel(id, NEEDS_ANSWER_LABEL, writeOptions(dbPath)))
 }
 
 export async function answerNeedsInput(
@@ -131,7 +136,7 @@ export async function answerNeedsInput(
   const options = writeOptions(dbPath)
   const result = await answerThenClear(
     () => bdAddComment(id, comment, options),
-    () => bdRemoveLabel(id, HUMAN_LABEL, options),
+    () => bdRemoveLabel(id, NEEDS_ANSWER_LABEL, options),
   )
   invalidateEpicCache()
   return result.success

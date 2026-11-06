@@ -11,13 +11,13 @@ export function answerComment(text: string): string | null {
 
 export async function answerThenClear(
   saveComment: () => Promise<void>,
-  clearHuman: () => Promise<void>,
+  clearNeedsAnswer: () => Promise<void>,
 ): Promise<AnswerResult> {
   let stage: "comment" | "clear" = "comment"
   try {
     await saveComment()
     stage = "clear"
-    await clearHuman()
+    await clearNeedsAnswer()
     return { success: true }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -25,7 +25,7 @@ export async function answerThenClear(
     return {
       success: false,
       stage,
-      error: `Answer saved as a comment, but removing the human label failed: ${message}`,
+      error: `Answer saved as a comment, but removing the needs-answer label failed: ${message}`,
     }
   }
 }

@@ -1,6 +1,6 @@
 import type { BdBead } from "./bd"
 
-export const HUMAN_LABEL = "human"
+export const NEEDS_ANSWER_LABEL = "needs-answer"
 export const NEEDS_APPROVAL_LABEL = "needs-approval"
 export const APPROVED_LABEL = "approved"
 
