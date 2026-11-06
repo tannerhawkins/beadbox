@@ -24,18 +24,16 @@ import {
   Inbox,
   Loader2,
   RefreshCw,
-  ServerCrash,
   Settings,
   TrainFront,
 } from "lucide-react"
 import { safeCapture } from "@/lib/posthog-safe"
-import { Fragment, useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { AppHealth } from "../hooks/use-app-health"
 import { useHasTrains } from "@/hooks/use-has-trains"
 import { useHasWaiting } from "@/hooks/use-waiting-gates"
 import { useQueueCounts } from "@/hooks/use-review-queues"
 import { useViewport } from "../hooks/use-viewport"
-import { ERROR_CATEGORY_TITLES } from "../lib/epic-tree-utils"
 import {
   getAnalyticsEnabled,
   getWorkspaceHintDismissed,
@@ -45,11 +43,11 @@ import type { Workspace } from "../lib/types"
 import type { UpdateInfo } from "../lib/update-checker"
 import { cn } from "../lib/utils"
 import { BeadboxLogo } from "./beadbox-logo"
+import { HeaderHealthBanner } from "./header-health-banner"
 import { HelpFab } from "./help-fab"
+import { NavTab } from "./nav-tab"
 import { QueueTab } from "./queue-tab"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
-import { WorkspaceErrorScreen } from "./workspace-error-screen"
 
 function BeadboxLogoLoading({ size = 28 }: { size?: number }) {
   return (
@@ -288,23 +286,13 @@ export function Header({
           {/* View navigation */}
           {!isMobile && (
             <div className="flex items-center gap-1 ml-4 border-l border-border/50 pl-4">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigateTo("home", "tab")}
-                    className={cn(
-                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
-                      pathname === "/"
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                    )}
-                  >
-                    <Circle className="h-3.5 w-3.5" />
-                    Beads
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Beads ⌘1</TooltipContent>
-              </Tooltip>
+              <NavTab
+                label="Beads"
+                tooltip="Beads ⌘1"
+                icon={Circle}
+                active={pathname === "/"}
+                onSelect={() => navigateTo("home", "tab")}
+              />
               <QueueTab
                 label="Needs Input"
                 tooltip="Needs Input ⌘7"
@@ -323,94 +311,44 @@ export function Header({
                 countTestId="tab-count-pr-review"
                 onSelect={() => navigateTo("pr-review", "tab")}
               />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigateTo("activity", "tab")}
-                    className={cn(
-                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
-                      pathname === "/activity"
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                    )}
-                  >
-                    <Activity className="h-3.5 w-3.5" />
-                    Activity
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Activity ⌘2</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigateTo("formulas", "tab")}
-                    className={cn(
-                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
-                      pathname === "/formulas"
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                    )}
-                  >
-                    <FlaskConical className="h-3.5 w-3.5" />
-                    Formulas
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Formulas \u2318\u0033</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigateTo("chart", "tab")}
-                    className={cn(
-                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
-                      pathname === "/chart"
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                    )}
-                  >
-                    <ChartGantt className="h-3.5 w-3.5" />
-                    Chart
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Chart ⌘5</TooltipContent>
-              </Tooltip>
+              <NavTab
+                label="Activity"
+                tooltip="Activity ⌘2"
+                icon={Activity}
+                active={pathname === "/activity"}
+                onSelect={() => navigateTo("activity", "tab")}
+              />
+              <NavTab
+                label="Formulas"
+                tooltip="Formulas ⌘3"
+                icon={FlaskConical}
+                active={pathname === "/formulas"}
+                onSelect={() => navigateTo("formulas", "tab")}
+              />
+              <NavTab
+                label="Chart"
+                tooltip="Chart ⌘5"
+                icon={ChartGantt}
+                active={pathname === "/chart"}
+                onSelect={() => navigateTo("chart", "tab")}
+              />
               {hasTrains && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigateTo("trains", "tab")}
-                    className={cn(
-                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
-                      pathname === "/trains"
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                    )}
-                  >
-                    <TrainFront className="h-3.5 w-3.5" />
-                    Trains
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Trains ⌘4</TooltipContent>
-              </Tooltip>
+                <NavTab
+                  label="Trains"
+                  tooltip="Trains ⌘4"
+                  icon={TrainFront}
+                  active={pathname === "/trains"}
+                  onSelect={() => navigateTo("trains", "tab")}
+                />
               )}
               {hasWaiting && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigateTo("waiting", "tab")}
-                    className={cn(
-                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
-                      pathname === "/waiting"
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                    )}
-                  >
-                    <Hourglass className="h-3.5 w-3.5" />
-                    Waiting
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Waiting ⌘6</TooltipContent>
-              </Tooltip>
+                <NavTab
+                  label="Waiting"
+                  tooltip="Waiting ⌘6"
+                  icon={Hourglass}
+                  active={pathname === "/waiting"}
+                  onSelect={() => navigateTo("waiting", "tab")}
+                />
               )}
             </div>
           )}
@@ -533,65 +471,17 @@ export function Header({
           </Tooltip>
         </div>
       </div>
-      {appHealth &&
-        (appHealth.status === "error" || appHealth.status === "fatal") &&
-        (() => {
-          const loadError = appHealth.loadError
-          const summaryMsg =
-            loadError && loadError.category !== "unknown"
-              ? (ERROR_CATEGORY_TITLES[loadError.category] ?? appHealth.reason)
-              : appHealth.reason
-          return (
-            <Fragment>
-              <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-red-500/10 border-t border-red-500/20 text-red-400 text-xs">
-                <ServerCrash className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">
-                  {autoRetryCountdown != null && autoRetryCountdown > 0
-                    ? `Retrying automatically... (${autoRetryCountdown}s)`
-                    : summaryMsg}
-                </span>
-                {loadError && (
-                  <button
-                    onClick={() => setHealthDetailsOpen(true)}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-colors shrink-0"
-                  >
-                    Details
-                  </button>
-                )}
-                {appHealth.status === "error" && appHealth.canRetry && onRefresh && (
-                  <button
-                    onClick={() => onRefresh?.()}
-                    disabled={isRefreshing}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-colors shrink-0"
-                  >
-                    <RefreshCw className={cn("h-3 w-3", isRefreshing && "animate-spin")} />
-                    Retry
-                  </button>
-                )}
-              </div>
-              {loadError && (
-                <Dialog open={healthDetailsOpen} onOpenChange={setHealthDetailsOpen}>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {ERROR_CATEGORY_TITLES[loadError.category] ?? "Error Details"}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <WorkspaceErrorScreen
-                      error={loadError}
-                      onRetry={() => {
-                        setHealthDetailsOpen(false)
-                        onRefresh?.()
-                      }}
-                      isRetrying={!!isRefreshing}
-                      databasePath={currentWorkspace?.databasePath ?? ""}
-                    />
-                  </DialogContent>
-                </Dialog>
-              )}
-            </Fragment>
-          )
-        })()}
+      {appHealth && (appHealth.status === "error" || appHealth.status === "fatal") && (
+        <HeaderHealthBanner
+          appHealth={appHealth}
+          autoRetryCountdown={autoRetryCountdown}
+          databasePath={currentWorkspace?.databasePath ?? ""}
+          detailsOpen={healthDetailsOpen}
+          onDetailsOpenChange={setHealthDetailsOpen}
+          isRefreshing={isRefreshing}
+          onRefresh={onRefresh}
+        />
+      )}
     </header>
   )
 }
