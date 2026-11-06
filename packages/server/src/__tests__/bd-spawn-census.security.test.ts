@@ -99,6 +99,10 @@ const REVIEWED: Record<string, { count: number; why: string }> = {
   },
 
   // --- not bd ---
+  "lib/git-remote.ts::readOriginUrl::execFileAsync": {
+    count: 1,
+    why: "fixed argv: git -C <dir> remote get-url origin; dir is an absolute path from projectDirFromDatabasePath (cannot start with '-') passed as the value of -C; read-only, no shell, 5s timeout",
+  },
   "handlers/system.ts::openInFileManager::execFile": {
     count: 1,
     why: "open / explorer.exe / xdg-open with path.resolve(dirPath): an absolute path cannot start with '-', and existsSync is checked first",

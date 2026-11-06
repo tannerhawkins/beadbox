@@ -87,10 +87,11 @@ export function _getRpcTap(): ((evt: BdCommandEvent) => void) | null {
 }
 
 /**
- * Methods whose arguments carry a credential (beadbox-hqtp). Their Commands-tab
- * row shows one "<redacted>" placeholder in place of every argument, not just
- * the password: its position differs per method and moves when a signature
- * changes. rpc-redaction-census.test.ts fails if a server handler takes a
+ * Methods whose arguments carry a credential (beadbox-hqtp), or free text a
+ * user may paste a credential into. Their Commands-tab row shows one
+ * "<redacted>" placeholder in place of every argument, not just the password:
+ * its position differs per method and moves when a signature changes.
+ * rpc-redaction-census.test.ts fails if a server handler takes a
  * password-like parameter and is not listed here.
  */
 export const REDACTED_ARG_METHODS: ReadonlySet<string> = new Set([
@@ -99,6 +100,7 @@ export const REDACTED_ARG_METHODS: ReadonlySet<string> = new Set([
   "workspaces.setServerPassword",
   "workspaces.replaceLocalWithServer",
   "workspaces.updateServerConnection",
+  "reviewQueues.answerNeedsInput",
 ])
 
 function tapArgs(ns: string, prop: string, args: unknown[]): string[] {
@@ -544,6 +546,7 @@ function buildTauriRpc(manager: Pick<SidecarManager, "call"> = sidecarManager): 
     memory: namespaceProxy("memory"),
     molecules: namespaceProxy("molecules"),
     recovery: namespaceProxy("recovery"),
+    reviewQueues: namespaceProxy("reviewQueues"),
     session: namespaceProxy("session"),
     subscribe: namespaceProxy("subscribe"),
     system: namespaceProxy("system"),

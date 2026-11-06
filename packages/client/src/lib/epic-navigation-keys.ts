@@ -22,6 +22,7 @@
 // they need to.
 
 import type { Bead } from "./types"
+import { VIEW_ROUTES } from "./view-switch-keys"
 
 export interface NavigableItem {
   id: string
@@ -111,14 +112,12 @@ const tryFilterBarShortcut = (e: KeyboardEvent, ctx: KeyNavContext): boolean => 
 
 const tryViewSwitchShortcut = (e: KeyboardEvent, ctx: KeyNavContext): boolean => {
   if (!(e.metaKey || e.ctrlKey)) return false
-  const k = e.key
-  if (k !== "1" && k !== "2" && k !== "3" && k !== "4" && k !== "5" && k !== "6") return false
+  const to = VIEW_ROUTES[e.key]
+  if (!to) return false
   e.preventDefault()
-  if (e.key === "2") ctx.router.push("/activity")
-  if (e.key === "3") ctx.router.push("/formulas")
-  if (e.key === "4" && ctx.hasTrains) ctx.router.push("/trains")
-  if (e.key === "5") ctx.router.push("/chart")
-  if (e.key === "6" && ctx.hasWaiting) ctx.router.push("/waiting")
+  // ⌘1 is the current Beads view; ⌘4 and ⌘6 only navigate when their page has content.
+  if (to === "/" || (to === "/trains" && !ctx.hasTrains) || (to === "/waiting" && !ctx.hasWaiting)) return true
+  ctx.router.push(to)
   return true
 }
 
@@ -130,7 +129,7 @@ const tryRefreshShortcut = (e: KeyboardEvent, ctx: KeyNavContext): boolean => {
   return true
 }
 
-// Cmd+,, Cmd+F, Cmd+1–6, Cmd+R, F5. Run before the typing-target gate
+// Cmd+,, Cmd+F, Cmd+1–8, Cmd+R, F5. Run before the typing-target gate
 // because they should work even from inputs.
 export const handleGlobalShortcut = (e: KeyboardEvent, ctx: KeyNavContext): boolean =>
   trySettingsShortcut(e, ctx) ||

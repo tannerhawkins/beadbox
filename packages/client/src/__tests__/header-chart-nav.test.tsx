@@ -52,13 +52,13 @@ const tabs = () =>
   screen
     .getAllByRole("button")
     .map((b) => b.textContent?.trim())
-    .filter((t) => ["Beads", "Activity", "Formulas", "Chart"].includes(t ?? ""))
+    .filter((t) => ["Beads", "Needs Input", "PR Review", "Activity", "Formulas", "Chart"].includes(t ?? ""))
 
 describe("Header Chart tab", () => {
-  test("comes right after Formulas", async () => {
+  test("comes right after Formulas, and the queue tabs sit next to Beads", async () => {
     renderAt("/")
     await screen.findByText("BEADS")
-    expect(tabs()).toEqual(["Beads", "Activity", "Formulas", "Chart"])
+    expect(tabs()).toEqual(["Beads", "Needs Input", "PR Review", "Activity", "Formulas", "Chart"])
   })
 
   test("clicking it opens the Chart view and marks the tab active", async () => {

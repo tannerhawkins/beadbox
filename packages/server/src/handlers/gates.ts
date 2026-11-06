@@ -15,8 +15,8 @@ import {
   listBeads,
   listOpenGates,
 } from "../lib/bd"
-import { readMetadataMode } from "../lib/dolt-metadata"
 import { isOpenGate, resolveRefusal, waitingGates } from "../lib/gates"
+import { readOptions } from "../lib/read-options"
 import type { WaitingGate } from "../lib/types"
 
 type Success<T> = { success: true; data: T }
@@ -24,13 +24,6 @@ type Failure = { success: false; error: string }
 
 function extractError(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
-}
-
-// A server-mode workspace runs bd in parallel; embedded mode keeps the db lock.
-async function readOptions(dbPath: string | undefined): Promise<BdOptions> {
-  const options: BdOptions = dbPath ? { db: dbPath } : {}
-  if (dbPath && (await readMetadataMode(dbPath)) === "server") options.parallel = true
-  return options
 }
 
 /**
