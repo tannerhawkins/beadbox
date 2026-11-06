@@ -46,6 +46,7 @@ import type { UpdateInfo } from "../lib/update-checker"
 import { cn } from "../lib/utils"
 import { BeadboxLogo } from "./beadbox-logo"
 import { HelpFab } from "./help-fab"
+import { QueueTab } from "./queue-tab"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { WorkspaceErrorScreen } from "./workspace-error-screen"
@@ -304,56 +305,24 @@ export function Header({
                 </TooltipTrigger>
                 <TooltipContent>Beads ⌘1</TooltipContent>
               </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigateTo("needs-input", "tab")}
-                    className={cn(
-                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
-                      pathname === "/needs-input"
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                    )}
-                  >
-                    <Inbox className="h-3.5 w-3.5" />
-                    Needs Input
-                    {queueCounts.needsInput > 0 && (
-                      <span
-                        data-testid="tab-count-needs-input"
-                        className="rounded-full bg-accent px-1.5 text-[10px] font-semibold"
-                      >
-                        {queueCounts.needsInput}
-                      </span>
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Needs Input ⌘7</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => navigateTo("pr-review", "tab")}
-                    className={cn(
-                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
-                      pathname === "/pr-review"
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                    )}
-                  >
-                    <GitPullRequest className="h-3.5 w-3.5" />
-                    PR Review
-                    {queueCounts.prReview > 0 && (
-                      <span
-                        data-testid="tab-count-pr-review"
-                        className="rounded-full bg-accent px-1.5 text-[10px] font-semibold"
-                      >
-                        {queueCounts.prReview}
-                      </span>
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>PR Review ⌘8</TooltipContent>
-              </Tooltip>
+              <QueueTab
+                label="Needs Input"
+                tooltip="Needs Input ⌘7"
+                icon={Inbox}
+                active={pathname === "/needs-input"}
+                count={queueCounts.needsInput}
+                countTestId="tab-count-needs-input"
+                onSelect={() => navigateTo("needs-input", "tab")}
+              />
+              <QueueTab
+                label="PR Review"
+                tooltip="PR Review ⌘8"
+                icon={GitPullRequest}
+                active={pathname === "/pr-review"}
+                count={queueCounts.prReview}
+                countTestId="tab-count-pr-review"
+                onSelect={() => navigateTo("pr-review", "tab")}
+              />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
