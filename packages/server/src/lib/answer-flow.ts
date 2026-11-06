@@ -1,6 +1,6 @@
-export const ANSWER_PREFIX = "Answer from Tanner:"
+const ANSWER_PREFIX = "Answer from Tanner:"
 
-export type AnswerResult =
+type AnswerResult =
   | { success: true }
   | { success: false; stage: "comment" | "clear"; error: string }
 
@@ -9,27 +9,23 @@ export function answerComment(text: string): string | null {
   return trimmed === "" ? null : `${ANSWER_PREFIX} ${trimmed}`
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
-}
-
 export async function answerThenClear(
   saveComment: () => Promise<void>,
   clearHuman: () => Promise<void>,
 ): Promise<AnswerResult> {
+  let stage: "comment" | "clear" = "comment"
   try {
     await saveComment()
-  } catch (error) {
-    return { success: false, stage: "comment", error: errorMessage(error) }
-  }
-  try {
+    stage = "clear"
     await clearHuman()
+    return { success: true }
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (stage === "comment") return { success: false, stage, error: message }
     return {
       success: false,
-      stage: "clear",
-      error: `Answer saved as a comment, but removing the human label failed: ${errorMessage(error)}`,
+      stage,
+      error: `Answer saved as a comment, but removing the human label failed: ${message}`,
     }
   }
-  return { success: true }
 }

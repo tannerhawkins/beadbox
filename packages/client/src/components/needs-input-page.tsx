@@ -24,10 +24,6 @@ function describeFailure(outcome: { error?: string; stage?: "comment" | "clear" 
     : detail
 }
 
-function describeThrown(err: unknown): string {
-  return err instanceof Error ? err.message : String(err)
-}
-
 function NeedsInputItem({ row, writes }: { row: NeedsInputRow; writes: Writes }) {
   const navigate = useNavigate()
   const [draft, setDraft] = useState("")
@@ -46,7 +42,7 @@ function NeedsInputItem({ row, writes }: { row: NeedsInputRow; writes: Writes })
     try {
       outcome = await write()
     } catch (err) {
-      return fail(describeThrown(err))
+      return fail(err instanceof Error ? err.message : String(err))
     }
     if (outcome === null) return false
     if (outcome.success) {

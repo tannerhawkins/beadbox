@@ -25,7 +25,7 @@ type Success<T> = { success: true; data: T }
 type Failure = { success: false; error: string }
 type WriteResult = { success: boolean; error?: string }
 
-export interface PrReviewRow {
+interface PrReviewRow {
   id: string
   title: string
   notes: string
@@ -34,19 +34,15 @@ export interface PrReviewRow {
   approved: boolean
 }
 
-export interface NeedsInputRow {
+interface NeedsInputRow {
   id: string
   title: string
   notes: string
 }
 
-export interface QueueCounts {
+interface QueueCounts {
   prReview: number
   needsInput: number
-}
-
-function extractError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
 }
 
 function writeOptions(dbPath: string | undefined): BdOptions {
@@ -75,49 +71,46 @@ async function originRepo(dbPath: string | undefined): Promise<GithubRepo | null
   return parseGithubRemote(projectDir === null ? null : await readOriginUrl(projectDir))
 }
 
-async function runWrite(write: () => Promise<void>): Promise<WriteResult> {
+async function query<T>(run: () => Promise<T>): Promise<Success<T> | Failure> {
   try {
+    return { success: true, data: await run() }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) }
+  }
+}
+
+async function runWrite(write: () => Promise<void>): Promise<WriteResult> {
+  const result = await query(async () => {
     await write()
     invalidateEpicCache()
-    return { success: true }
-  } catch (error: unknown) {
-    console.error("Review queue write failed:", error)
-    return { success: false, error: extractError(error) }
-  }
+  })
+  if (!result.success) console.error("Review queue write failed:", result.error)
+  return result.success ? { success: true } : result
 }
 
-export async function listPrReview(dbPath?: string): Promise<Success<PrReviewRow[]> | Failure> {
-  try {
+export function listPrReview(dbPath?: string): Promise<Success<PrReviewRow[]> | Failure> {
+  return query(async () => {
     const beads = selectQueue(await listBeads(await readOptions(dbPath)), NEEDS_APPROVAL_LABEL)
     const repo = beads.length === 0 ? null : await originRepo(dbPath)
-    return { success: true, data: beads.map((bead) => toPrReviewRow(bead, repo)) }
-  } catch (error: unknown) {
-    return { success: false, error: extractError(error) }
-  }
+    return beads.map((bead) => toPrReviewRow(bead, repo))
+  })
 }
 
-export async function listNeedsInput(dbPath?: string): Promise<Success<NeedsInputRow[]> | Failure> {
-  try {
+export function listNeedsInput(dbPath?: string): Promise<Success<NeedsInputRow[]> | Failure> {
+  return query(async () => {
     const beads = selectQueue(await listBeads(await readOptions(dbPath)), HUMAN_LABEL)
-    return { success: true, data: beads.map(toNeedsInputRow) }
-  } catch (error: unknown) {
-    return { success: false, error: extractError(error) }
-  }
+    return beads.map(toNeedsInputRow)
+  })
 }
 
-export async function countQueues(dbPath?: string): Promise<Success<QueueCounts> | Failure> {
-  try {
+export function countQueues(dbPath?: string): Promise<Success<QueueCounts> | Failure> {
+  return query(async () => {
     const beads = await listBeads(await readOptions(dbPath))
     return {
-      success: true,
-      data: {
-        prReview: selectQueue(beads, NEEDS_APPROVAL_LABEL).length,
-        needsInput: selectQueue(beads, HUMAN_LABEL).length,
-      },
+      prReview: selectQueue(beads, NEEDS_APPROVAL_LABEL).length,
+      needsInput: selectQueue(beads, HUMAN_LABEL).length,
     }
-  } catch (error: unknown) {
-    return { success: false, error: extractError(error) }
-  }
+  })
 }
 
 export function approvePr(id: string, dbPath?: string): Promise<WriteResult> {

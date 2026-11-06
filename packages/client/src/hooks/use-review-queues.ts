@@ -7,7 +7,7 @@ type WriteResult = { success: boolean; error?: string; stage?: "comment" | "clea
 
 export type PrReviewRow = Ok<Awaited<ReturnType<typeof rpc.reviewQueues.listPrReview>>>[number]
 export type NeedsInputRow = Ok<Awaited<ReturnType<typeof rpc.reviewQueues.listNeedsInput>>>[number]
-export type QueueCounts = Ok<Awaited<ReturnType<typeof rpc.reviewQueues.countQueues>>>
+type QueueCounts = Ok<Awaited<ReturnType<typeof rpc.reviewQueues.countQueues>>>
 
 function unwrap<T>(result: { success: true; data: T } | { success: false; error: string }): T {
   if (!result.success) throw new Error(result.error)
