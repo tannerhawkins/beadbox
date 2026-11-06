@@ -544,6 +544,7 @@ function buildTauriRpc(manager: Pick<SidecarManager, "call"> = sidecarManager): 
     memory: namespaceProxy("memory"),
     molecules: namespaceProxy("molecules"),
     recovery: namespaceProxy("recovery"),
+    reviewQueues: namespaceProxy("reviewQueues"),
     session: namespaceProxy("session"),
     subscribe: namespaceProxy("subscribe"),
     system: namespaceProxy("system"),

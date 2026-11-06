@@ -28,6 +28,7 @@ import * as health from "./health"
 import * as memory from "./memory"
 import * as molecules from "./molecules"
 import * as recovery from "./recovery"
+import * as reviewQueues from "./review-queues"
 import * as session from "./session"
 import * as subscribe from "./subscribe"
 import * as system from "./system"
@@ -55,6 +56,7 @@ export const handlers = {
   memory: wrapNamespace(memory, "memory"),
   molecules: wrapNamespace(molecules, "molecules"),
   recovery: wrapNamespace(recovery, "recovery"),
+  reviewQueues: wrapNamespace(reviewQueues, "reviewQueues"),
   session: wrapNamespace(session, "session"),
   subscribe,
   system: wrapNamespace(system, "system"),
