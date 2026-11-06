@@ -18,8 +18,10 @@ import {
   ChartGantt,
   Circle,
   FlaskConical,
+  GitPullRequest,
   Heart,
   Hourglass,
+  Inbox,
   Loader2,
   RefreshCw,
   ServerCrash,
@@ -31,6 +33,7 @@ import { Fragment, useCallback, useEffect, useState } from "react"
 import type { AppHealth } from "../hooks/use-app-health"
 import { useHasTrains } from "@/hooks/use-has-trains"
 import { useHasWaiting } from "@/hooks/use-waiting-gates"
+import { useQueueCounts } from "@/hooks/use-review-queues"
 import { useViewport } from "../hooks/use-viewport"
 import { ERROR_CATEGORY_TITLES } from "../lib/epic-tree-utils"
 import {
@@ -172,6 +175,7 @@ export function Header({
   const [healthDetailsOpen, setHealthDetailsOpen] = useState(false)
   const hasTrains = useHasTrains(currentWorkspace.databasePath)
   const hasWaiting = useHasWaiting(currentWorkspace.databasePath)
+  const queueCounts = useQueueCounts(currentWorkspace.databasePath)
 
   const navigateTo = useCallback(
     (destination: string, source: "tab" | "dropdown") => {
@@ -299,6 +303,56 @@ export function Header({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>Beads ⌘1</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => navigateTo("needs-input", "tab")}
+                    className={cn(
+                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
+                      pathname === "/needs-input"
+                        ? "bg-accent text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                    )}
+                  >
+                    <Inbox className="h-3.5 w-3.5" />
+                    Needs Input
+                    {queueCounts.needsInput > 0 && (
+                      <span
+                        data-testid="tab-count-needs-input"
+                        className="rounded-full bg-accent px-1.5 text-[10px] font-semibold"
+                      >
+                        {queueCounts.needsInput}
+                      </span>
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Needs Input ⌘7</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => navigateTo("pr-review", "tab")}
+                    className={cn(
+                      "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1.5",
+                      pathname === "/pr-review"
+                        ? "bg-accent text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                    )}
+                  >
+                    <GitPullRequest className="h-3.5 w-3.5" />
+                    PR Review
+                    {queueCounts.prReview > 0 && (
+                      <span
+                        data-testid="tab-count-pr-review"
+                        className="rounded-full bg-accent px-1.5 text-[10px] font-semibold"
+                      >
+                        {queueCounts.prReview}
+                      </span>
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>PR Review ⌘8</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
