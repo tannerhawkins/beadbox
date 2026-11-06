@@ -1,13 +1,15 @@
-// ⌘1–⌘6 view switching for pages without their own key handler (Chart,
-// Trains, Waiting). Beads, Activity and Formulas keep their existing handlers.
+// ⌘1–⌘8 view switching. Beads handles ⌘1–⌘8 in epic-navigation-keys using the
+// same VIEW_ROUTES table.
 
-const ROUTES: Record<string, string> = {
+export const VIEW_ROUTES: Record<string, string> = {
   "1": "/",
   "2": "/activity",
   "3": "/formulas",
   "4": "/trains",
   "5": "/chart",
   "6": "/waiting",
+  "7": "/needs-input",
+  "8": "/pr-review",
 }
 
 export interface ViewSwitchContext {
@@ -19,7 +21,7 @@ export interface ViewSwitchContext {
 // Returns true when the event was a view-switch shortcut (handled or not).
 export function tryViewSwitchShortcut(e: KeyboardEvent, ctx: ViewSwitchContext): boolean {
   if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey) return false
-  const to = ROUTES[e.key]
+  const to = VIEW_ROUTES[e.key]
   if (!to) return false
   e.preventDefault()
   if (to === "/trains" && !ctx.hasTrains) return true

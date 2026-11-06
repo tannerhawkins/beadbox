@@ -30,6 +30,7 @@ import {
 } from "../lib/local-storage"
 import { applyThemeClass } from "../lib/theme"
 import { rpc } from "../lib/rpc"
+import { tryViewSwitchShortcut } from "../lib/view-switch-keys"
 import { composePipelineChain } from "../lib/status-chain"
 import { useSubscriptionChangeSignal } from "../lib/subscribe"
 import type { ActivityEvent, PipelineStage, Workspace } from "../lib/types"
@@ -508,26 +509,7 @@ function ActivityViewer() {
         return
       }
 
-      // Cmd+1/Cmd+2/Cmd+3: view switching (always active)
-      if ((e.metaKey || e.ctrlKey) && (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4" || e.key === "5" || e.key === "6")) {
-        e.preventDefault()
-        if (e.key === "1") {
-          navigate({ to: "/" })
-        }
-        if (e.key === "3") {
-          navigate({ to: "/formulas" as never })
-        }
-        if (e.key === "4" && hasTrains) {
-          navigate({ to: "/trains" as never })
-        }
-        if (e.key === "5") {
-          navigate({ to: "/chart" as never })
-        }
-        if (e.key === "6" && hasWaiting) {
-          navigate({ to: "/waiting" as never })
-        }
-        return
-      }
+      if (tryViewSwitchShortcut(e, { push: (to) => navigate({ to: to as never }), hasTrains, hasWaiting })) return
 
       // Cmd/Ctrl+R or F5: Refresh data (prevent browser reload)
       if ((e.key === "r" && (e.metaKey || e.ctrlKey) && !e.shiftKey) || e.key === "F5") {

@@ -54,7 +54,7 @@ describe("tryViewSwitchShortcut", () => {
     const ctx = { push, hasTrains: true, hasWaiting: true }
     expect(tryViewSwitchShortcut(key("5", {}), ctx)).toBe(false)
     expect(tryViewSwitchShortcut(key("6", {}), ctx)).toBe(false)
-    expect(tryViewSwitchShortcut(key("7"), ctx)).toBe(false)
+    expect(tryViewSwitchShortcut(key("7", {}), ctx)).toBe(false)
     expect(push).not.toHaveBeenCalled()
   })
 })

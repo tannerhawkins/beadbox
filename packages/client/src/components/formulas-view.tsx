@@ -54,6 +54,7 @@ import {
 } from "../lib/local-storage"
 import { applyThemeClass } from "../lib/theme"
 import { rpc } from "../lib/rpc"
+import { tryViewSwitchShortcut } from "../lib/view-switch-keys"
 import type {
   FormulaDetail,
   FormulaSummary,
@@ -492,15 +493,7 @@ export function FormulasView() {
         setSettingsOpen(true)
         return
       }
-      if ((e.metaKey || e.ctrlKey) && (e.key === "1" || e.key === "2" || e.key === "4" || e.key === "5" || e.key === "6")) {
-        e.preventDefault()
-        if (e.key === "1") router.navigate({ to: "/" as never })
-        if (e.key === "2") router.navigate({ to: "/activity" as never })
-        if (e.key === "4" && hasTrains) router.navigate({ to: "/trains" as never })
-        if (e.key === "5") router.navigate({ to: "/chart" as never })
-        if (e.key === "6" && hasWaiting) router.navigate({ to: "/waiting" as never })
-        return
-      }
+      if (tryViewSwitchShortcut(e, { push: (to) => router.navigate({ to: to as never }), hasTrains, hasWaiting })) return
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
